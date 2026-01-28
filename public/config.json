@@ -1,0 +1,101 @@
+{
+  "title": "Flat CMS",
+  "logo": "",
+  "logo_dark": "",
+  "provider": "local",
+  "media_folder": "public/uploads",
+  "public_folder": "/uploads",
+  "collections": [
+    {
+      "name": "blog",
+      "label": "Blog Posts",
+      "icon": "ph ph-note",
+      "path": "content/blog",
+      "extension": "mdx",
+      "format": "frontmatter",
+      "identifier_field": "title",
+      "filename": "{year}-{month}-{day}-{slug}",
+      "columns": [
+        { "name": "title", "label": "Title" },
+        { "name": "date", "label": "Date" },
+        { "name": "draft", "label": "Draft" }
+      ],
+      "fields": [
+        { "name": "title", "label": "Title", "type": "text", "required": true },
+        { "name": "slug", "label": "Slug", "type": "text", "required": true },
+        { "name": "date", "label": "Publish Date", "type": "date", "required": true, "default": "now" },
+        { "name": "draft", "label": "Draft Mode", "type": "boolean", "default": true,
+          "display": {
+            "true": "Draft",
+            "false": "Published",
+            "color_true": "amber",
+    "color_false": "emerald"
+          }
+        },
+        { "name": "tags", "label": "Tags", "type": "list" },
+        { "name": "content", "label": "Content (MDX)", "type": "markdown", "required": true }
+      ],
+      "sort": {
+        "key": "date",
+        "direction": "desc"
+      }
+    },
+    {
+      "name": "authors",
+      "label": "Authors",
+      "icon": "ph ph-user",
+      "path": "content/data/authors",
+      "extension": "json",
+      "format": "json",
+      "identifier_field": "name",
+      "columns": [
+        { "name": "name", "label": "Author Name" },
+        { "name": "twitter", "label": "Twitter" }
+      ],
+      "fields": [
+        { "name": "name", "label": "Name", "type": "text", "required": true },
+        { "name": "twitter", "label": "Twitter Handle", "type": "text", "required": false },
+        { "name": "bio", "label": "Biography", "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "name": "docs",
+      "label": "Documentation",
+      "path": "content/docs",
+      "extension": "md",
+      "format": "frontmatter",
+      "identifier_field": "title",
+      "filename": "{slug}",
+      "fields": [
+        { "name": "title", "label": "Doc Title", "type": "text", "required": true },
+        { "name": "order", "label": "Sidebar Order", "type": "number", "default": 0 },
+        { "name": "content", "label": "Markdown Body", "type": "markdown", "required": true }
+      ]
+    }
+  ],
+  "singletons": [
+    {
+      "name": "site_settings",
+      "label": "Site Settings",
+      "path": "content/data/settings.json",
+      "format": "json",
+      "icon": "ph ph-gear",
+      "fields": [
+        { "name": "site_name", "label": "Site Name", "type": "text", "required": true },
+        { "name": "description", "label": "SEO Description", "type": "textarea", "required": true },
+        { "name": "posts_per_page", "label": "Posts Per Page", "type": "number", "default": 10 }
+      ]
+    },
+    {
+      "name": "home_hero",
+      "label": "Home Hero Section",
+      "path": "content/hero.md",
+      "format": "frontmatter",
+      "fields": [
+        { "name": "headline", "label": "Headline", "type": "text", "required": true },
+        { "name": "cta_text", "label": "Button Text", "type": "text" },
+        { "name": "content", "label": "Hero Subtext", "type": "markdown" }
+      ]
+    }
+  ]
+}
