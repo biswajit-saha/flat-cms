@@ -1,6 +1,6 @@
 <script lang="ts">
 	let { 
-	value = $bindable(''), 
+	value = $bindable(false), 
 	label, 
 	required = false 
 	} = $props();
@@ -14,7 +14,6 @@
 		<input
 			type="checkbox"
 			bind:checked={value}
-			class="h-4 w-4 rounded border-neutral-300 dark:border-neutral-700 text-blue-600 focus:ring-blue-500"
-			on:change />
+			class="h-4 w-4 rounded border-neutral-300 dark:border-neutral-700 text-blue-600 focus:ring-blue-500" />
 	</label>
 </div>

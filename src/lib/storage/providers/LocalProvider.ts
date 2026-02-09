@@ -127,6 +127,12 @@ export class LocalProvider extends StorageProvider {
 
             // Delegate parsing to the utility
             const data = parseFile(text, format);
+
+            // Remove the first leading newline from the content, which is often added by parsers.
+            if (format === 'frontmatter' && data.content && typeof data.content === 'string') {
+                data.content = data.content.replace(/^(\r\n|\n)/, '');
+            }
+
             return { ...data, id };
         } catch (e) {
             console.error("Failed to get entry", e);

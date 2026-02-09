@@ -14,13 +14,25 @@
   const singleton = $derived($config?.singletons?.find(s => (s.slug || s.name) === id));
   const fields = $derived(singleton?.fields || []);
   
+  // Parse path to get folder, filename, and extension since singletons define a full path
+  const pathInfo = $derived.by(() => {
+    const s = singleton;
+    if (!s?.path) return { folder: '', name: '', extension: '' };
+    const parts = s.path.split('/');
+    const filename = parts.pop() || '';
+    const folder = parts.join('/');
+    const extIndex = filename.lastIndexOf('.');
+    const extension = extIndex > 0 ? filename.substring(extIndex + 1) : '';
+    const name = extIndex > 0 ? filename.substring(0, extIndex) : filename;
+    return { folder, name, extension };
+  });
+
   const mainFields = $derived(fields.filter(f => ['title', 'content', 'left'].includes(f.column || '') || f.name === 'title' || f.name === 'content'));
   const sidebarFields = $derived(fields.filter(f => !['title', 'content', 'left'].includes(f.column || '') && f.name !== 'title' && f.name !== 'content'));
 
   let data = $state<Record<string, any>>({});
   let loading = $state(true);
   let saving = $state(false);
-  let key = $derived(`${id}`); // to re-trigger effect
 
   $effect(() => {
     if ($config && id && !singleton) {
@@ -28,8 +40,6 @@
       return;
     }
 
-    key; // re-run when key changes
-    
     if (!singleton || !$storage) return;
 
     loading = true;
@@ -37,10 +47,10 @@
     const loadData = async () => {
       try {
         const entryData = await $storage.getEntry(
-          singleton.path,
-          singleton.slug || singleton.name,
-          singleton.extension,
-          singleton.format
+          pathInfo.folder,
+          pathInfo.name,
+          pathInfo.extension,
+          singleton!.format
         );
         
         const initialData: Record<string, any> = {};
@@ -83,11 +93,11 @@
     saving = true;
     try {
       await $storage.saveEntry(
-        singleton.path,
-        singleton.slug || singleton.name,
+        pathInfo.folder,
+        pathInfo.name,
         data,
-        singleton.extension,
-        singleton.format
+        pathInfo.extension,
+        singleton!.format
       );
       // TODO: Show success notification
     } catch (err) {
@@ -108,9 +118,9 @@
     <div>
       <div class="flex items-center justify-between mb-8">
         <div>
-          <h1 class="text-3xl font-bold text-neutral-900 dark:text-white tracking-tight">{singleton.label || singleton.name}</h1>
-          {#if singleton.description}
-            <p class="mt-2 text-neutral-600 dark:text-neutral-400">{singleton.description}</p>
+          <h1 class="text-3xl font-bold text-neutral-900 dark:text-white tracking-tight">{singleton?.label || singleton?.name}</h1>
+          {#if (singleton as any)?.description}
+            <p class="mt-2 text-neutral-600 dark:text-neutral-400">{(singleton as any).description}</p>
           {/if}
         </div>
         <div class="flex gap-3">
@@ -136,7 +146,7 @@
             <div class="space-y-6">
               {#each mainFields as field}
                 {@const Component = fieldComponents[field.type] || fallbackField}
-                <svelte:component this={Component} label={field.label || field.name} required={field.required} bind:value={data[field.name]} />
+                <Component label={field.label || field.name} required={field.required} bind:value={data[field.name]} />
               {/each}
             </div>
           </div>
@@ -146,7 +156,7 @@
             <div class="space-y-6">
               {#each sidebarFields as field}
                 {@const Component = fieldComponents[field.type] || fallbackField}
-                <svelte:component this={Component} label={field.label || field.name} required={field.required} bind:value={data[field.name]} />
+                <Component label={field.label || field.name} required={field.required} bind:value={data[field.name]} />
               {/each}
             </div>
           </div>
