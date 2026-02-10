@@ -24,6 +24,7 @@
   );
 
   let isMobileOpen = $state(false);
+  let needsPermission = $state(false);
 
   $effect(() => {
     // Initialize storage if config is loaded but storage is not ready
@@ -31,6 +32,33 @@
       initStorage($config as unknown as FlatCMSConfig);
     }
   });
+
+  async function checkPermission() {
+    if (!$storage || !$config) return;
+    const isLocal = $config.provider === 'local' || ($config.provider === 'auto' && typeof window !== 'undefined' && window.location.hostname === 'localhost');
+    
+    if (isLocal && 'hasAccess' in $storage) {
+      const hasAccess = await ($storage as any).hasAccess();
+      needsPermission = !hasAccess;
+    } else {
+      needsPermission = false;
+    }
+  }
+
+  $effect(() => {
+    checkPermission();
+  });
+
+  async function requestPermission() {
+    if ($storage && 'connect' in $storage) {
+      try {
+        await ($storage as any).connect();
+        await checkPermission();
+      } catch (e) {
+        console.error('Permission request failed', e);
+      }
+    }
+  }
   
   $effect(() => {
     document.documentElement.classList.toggle('dark', isDark);
@@ -212,6 +240,24 @@
     </header>
 
     <main class="flex-1 overflow-auto p-6">
+      {#if needsPermission}
+        <div class="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="flex items-start gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5 sm:mt-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <div>
+              <h3 class="font-semibold text-amber-900 dark:text-amber-100">Project Root Access Required</h3>
+              <p class="text-sm text-amber-700 dark:text-amber-300 mt-1">Please select the folder containing your content to continue editing.</p>
+            </div>
+          </div>
+          <button onclick={requestPermission} class="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors cursor-pointer whitespace-nowrap shadow-sm">
+            Select Folder
+          </button>
+        </div>
+      {/if}
       {@render children?.()}
     </main>
   </div>

@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Flat CMS Configuration",
+  "type": "object",
+  "required": ["collections"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "title": { "type": "string" },
+    "logo": { "type": "string" },
+    "logo_dark": { "type": "string" },
+    "provider": { "type": "string", "enum": ["local"] },
+    "media_folder": { "type": "string" },
+    "public_folder": { "type": "string" },
+    "collections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "label", "path", "extension", "fields"],
+        "properties": {
+          "name": { "type": "string" },
+          "label": { "type": "string" },
+          "icon": { "type": "string" },
+          "path": { "type": "string" },
+          "extension": { "type": "string" },
+          "format": { "type": "string", "enum": ["frontmatter", "json", "yaml", "yml"] },
+          "identifier_field": { "type": "string" },
+          "filename": { "type": "string" },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name"],
+              "properties": {
+                "name": { "type": "string" },
+                "label": { "type": "string" }
+              }
+            }
+          },
+          "sort": {
+            "type": "object",
+            "required": ["key"],
+            "properties": {
+              "key": { "type": "string" },
+              "direction": { "type": "string", "enum": ["asc", "desc"] }
+            }
+          },
+          "fields": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/field" }
+          }
+        }
+      }
+    },
+    "singletons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "label", "path", "format"],
+        "properties": {
+          "name": { "type": "string" },
+          "label": { "type": "string" },
+          "icon": { "type": "string" },
+          "path": { "type": "string" },
+          "format": { "type": "string", "enum": ["frontmatter", "json", "yaml", "yml"] },
+          "description": { "type": "string" },
+          "fields": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/field" }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "field": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "label": { "type": "string" },
+        "type": {
+          "type": "string",
+          "description": "The type of the input field.",
+          "enum": [
+            "text",
+            "textarea",
+            "markdown",
+            "number",
+            "boolean",
+            "date",
+            "list"
+          ]
+        },
+        "required": { "type": "boolean" },
+        "default": {
+          "type": ["string", "number", "boolean", "null"],
+          "description": "Default value for the field. For 'date' type, you can use 'now' to set the current date."
+        },
+        "column": { "type": "string" },
+        "display": {
+          "type": "object",
+          "description": "Controls how the value is displayed in the collection list view.",
+          "properties": {
+            "true": { "type": "string", "description": "Text to display for a boolean 'true' value." },
+            "false": { "type": "string", "description": "Text to display for a boolean 'false' value." },
+            "color_true": { "type": "string", "description": "Color theme for the 'true' value badge." },
+            "color_false": { "type": "string", "description": "Color theme for the 'false' value badge." }
+          },
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

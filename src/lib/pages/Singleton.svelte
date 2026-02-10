@@ -45,6 +45,23 @@
     loading = true;
     
     const loadData = async () => {
+      if ('hasAccess' in $storage) {
+        const hasAccess = await ($storage as any).hasAccess();
+        if (!hasAccess) {
+          // Don't try to load data. Initialize with default data.
+          const initialData: Record<string, any> = {};
+          for (const field of fields) {
+              if (field.default !== undefined) {
+                  initialData[field.name] = field.default === 'now' ? new Date().toISOString().split('T')[0] : field.default;
+              } else {
+                  initialData[field.name] = null;
+              }
+          }
+          data = initialData;
+          loading = false;
+          return;
+        }
+      }
       try {
         const entryData = await $storage.getEntry(
           pathInfo.folder,

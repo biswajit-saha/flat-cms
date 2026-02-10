@@ -27,6 +27,10 @@
     $config?.collections?.find(c => (c.slug || c.name) === collectionParam)
   );
 
+  const fieldsByName = $derived(
+    Object.fromEntries(collection?.fields.map(f => [f.name, f]) || [])
+  );
+
   const tableColumns = $derived(
     collection?.columns ?? [
       {
@@ -76,14 +80,23 @@
       return;
     }
 
+    if ('hasAccess' in $storage) {
+      const hasAccess = await ($storage as any).hasAccess();
+      if (!hasAccess) {
+        entries = [];
+        loading = false;
+        return;
+      }
+    }
+
     loading = true;
     await tick();
 
     try {
       const result = await $storage.listEntries(
-        collection.path,
-        collection.extension,
-        collection.format
+        collection.path || collection.name,
+        collection.extension || 'md',
+        collection.format || 'frontmatter'
       );
       entries = Array.isArray(result) ? result : [];
     } catch (err) {
@@ -152,7 +165,7 @@
     return String(value);
   }
 
-  const themeMap = {
+  const themeMap: Record<string, string> = {
     blue: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800',
     emerald: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800',
     rose: 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800',
@@ -160,8 +173,6 @@
     neutral: 'bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-900',
     ghost: 'bg-transparent text-neutral-400 border-neutral-200 dark:border-neutral-800'
   };
-
-  type ThemeColor = keyof typeof themeMap;
 </script>
 
 <BaseLayout>
@@ -178,7 +189,7 @@
             Managing {entries.length}
             {entries.length === 1 ? ' entry' : ' entries'} in
             <code class="px-1 text-xs rounded bg-neutral-100 dark:bg-neutral-800">
-              {collection?.path}
+              {collection?.path || collection?.name}
             </code>
           </p>
         {/if}
@@ -242,13 +253,26 @@
             {#each sortedEntries as entry (entry.id)}
               <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-800/40">
                 {#each tableColumns as col}
+                  {@const fieldDef = fieldsByName[col.name]}
+                  {@const value = entry[col.name]}
                   <td class="px-6 py-4">
                     {#if col.name === (collection?.identifier_field || 'title')}
                       <a href="/collection/{collectionParam}/edit/{entry.id}" use:link class="font-bold hover:underline">
-                        {formatValue(entry[col.name])}
+                        {formatValue(value)}
                       </a>
+                    {:else if fieldDef?.type === 'boolean' && fieldDef.display}
+                      {@const text = value == null ? '' : (value ? fieldDef.display.true : fieldDef.display.false)}
+                      {@const color = (value == null ? 'ghost' : (value ? fieldDef.display.color_true : fieldDef.display.color_false)) || 'ghost'}
+                      
+                      {#if text}
+                        <span class="px-2 py-1 text-xs font-medium rounded-full border {themeMap[color] || themeMap.ghost}">
+                          {text}
+                        </span>
+                      {:else}
+                        {formatValue(value)}
+                      {/if}
                     {:else}
-                      {formatValue(entry[col.name])}
+                      {formatValue(value)}
                     {/if}
                   </td>
                 {/each}
